@@ -10,6 +10,41 @@ class JSONLParser:
     def __init__(self, claude_projects_path: str = None):
         self.claude_projects_path = claude_projects_path or os.path.expanduser("~/.claude/projects")
     
+    def _get_project_path(self, project_name: str) -> Optional[str]:
+        """
+        Safely construct a project path from the given name.
+        
+        Ensures that the resulting path stays within the claude_projects_path
+        directory to prevent path traversal.
+        """
+        # Reject empty or obviously dangerous project names early
+        if not project_name:
+            return None
+        project_name = project_name.strip()
+        if not project_name or project_name in {".", ".."}:
+            return None
+        # Disallow any path separators to ensure this is a single directory name
+        if os.sep in project_name or (os.altsep and os.altsep in project_name):
+            return None
+        # Optionally restrict to a reasonable set of characters and length
+        # to avoid control characters or overly long names.
+        if len(project_name) > 255:
+            return None
+
+        try:
+            base_path = Path(self.claude_projects_path).resolve()
+            candidate_path = (base_path / project_name).resolve()
+        except Exception:
+            return None
+
+        # Ensure the candidate path is within the base path
+        try:
+            candidate_path.relative_to(base_path)
+        except ValueError:
+            return None
+
+        return str(candidate_path)
+    
     def get_projects(self) -> List[Dict]:
         """Scan and return all Claude Code projects"""
         projects = []
@@ -34,10 +69,10 @@ class JSONLParser:
     
     def get_sessions(self, project_name: str) -> List[Dict]:
         """Get all session files for a project with metadata"""
-        project_path = os.path.join(self.claude_projects_path, project_name)
+        project_path = self._get_project_path(project_name)
         sessions = []
         
-        if not os.path.exists(project_path):
+        if not project_path or not os.path.exists(project_path):
             return sessions
         
         for filename in os.listdir(project_path):
