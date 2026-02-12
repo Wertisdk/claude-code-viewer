@@ -26,6 +26,10 @@ class JSONLParser:
         # Disallow any path separators to ensure this is a single directory name
         if os.sep in project_name or (os.altsep and os.altsep in project_name):
             return None
+        # Optionally restrict to a reasonable set of characters and length
+        # to avoid control characters or overly long names.
+        if len(project_name) > 255:
+            return None
 
         try:
             base_path = Path(self.claude_projects_path).resolve()

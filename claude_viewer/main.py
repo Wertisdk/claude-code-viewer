@@ -179,6 +179,10 @@ async def get_projects():
 async def project_view(request: Request, project_name: str):
     """Project page showing all sessions"""
     parser = get_parser()
+    # Validate project_name and ensure it maps to a safe path
+    project_path = parser._get_project_path(project_name)
+    if not project_path:
+        raise HTTPException(status_code=404, detail="Project not found")
     sessions = parser.get_sessions(project_name)
     if not sessions:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -194,6 +198,10 @@ async def project_view(request: Request, project_name: str):
 async def get_sessions(project_name: str):
     """API endpoint to get sessions for a project"""
     parser = get_parser()
+    # Validate project_name and ensure it maps to a safe path
+    project_path = parser._get_project_path(project_name)
+    if not project_path:
+        raise HTTPException(status_code=404, detail="Project not found")
     sessions = parser.get_sessions(project_name)
     if not sessions:
         raise HTTPException(status_code=404, detail="Project not found")
