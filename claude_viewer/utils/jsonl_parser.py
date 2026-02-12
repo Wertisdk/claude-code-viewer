@@ -17,6 +17,16 @@ class JSONLParser:
         Ensures that the resulting path stays within the claude_projects_path
         directory to prevent path traversal.
         """
+        # Reject empty or obviously dangerous project names early
+        if not project_name:
+            return None
+        project_name = project_name.strip()
+        if not project_name or project_name in {".", ".."}:
+            return None
+        # Disallow any path separators to ensure this is a single directory name
+        if os.sep in project_name or (os.altsep and os.altsep in project_name):
+            return None
+
         try:
             base_path = Path(self.claude_projects_path).resolve()
             candidate_path = (base_path / project_name).resolve()
