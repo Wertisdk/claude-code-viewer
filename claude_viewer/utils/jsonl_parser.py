@@ -115,7 +115,9 @@ class JSONLParser:
         if not session_id:
             return {"messages": [], "total": 0, "page": page, "per_page": per_page}
         # Disallow path separators in session_id
-        if os.sep in session_id or os.altsep in session_id:
+        if os.sep in session_id:
+            return {"messages": [], "total": 0, "page": page, "per_page": per_page}
+        if os.altsep and os.altsep in session_id:
             return {"messages": [], "total": 0, "page": page, "per_page": per_page}
         # Disallow relative path components
         if session_id in {".", ".."}:
