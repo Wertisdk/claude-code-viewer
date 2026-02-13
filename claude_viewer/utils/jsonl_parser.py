@@ -111,14 +111,16 @@ class JSONLParser:
             return {"messages": [], "total": 0, "page": page, "per_page": per_page}
         
         # Validate session_id to prevent path traversal
-        if not session_id or not session_id.strip():
+        if not session_id:
             return {"messages": [], "total": 0, "page": page, "per_page": per_page}
         session_id = session_id.strip()
+        if not session_id:
+            return {"messages": [], "total": 0, "page": page, "per_page": per_page}
         # Disallow path separators in session_id
         if os.sep in session_id or (os.altsep and os.altsep in session_id):
             return {"messages": [], "total": 0, "page": page, "per_page": per_page}
         # Disallow relative path components
-        if session_id in {".", ".."} or session_id.startswith("."):
+        if session_id in {".", ".."}:
             return {"messages": [], "total": 0, "page": page, "per_page": per_page}
         
         session_path = os.path.join(project_path, f"{session_id}.jsonl")
