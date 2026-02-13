@@ -105,28 +105,31 @@ class JSONLParser:
     ) -> Dict:
         """Get paginated conversation data with optional filtering"""
         
+        # Empty result to return on validation failures
+        empty_result = {"messages": [], "total": 0, "page": page, "per_page": per_page}
+        
         # Validate project_name to prevent path traversal
         project_path = self._get_project_path(project_name)
         if not project_path:
-            return {"messages": [], "total": 0, "page": page, "per_page": per_page}
+            return empty_result
         
         # Validate session_id to prevent path traversal
         session_id = session_id.strip() if session_id else ""
         if not session_id:
-            return {"messages": [], "total": 0, "page": page, "per_page": per_page}
+            return empty_result
         # Disallow path separators in session_id
         if os.sep in session_id:
-            return {"messages": [], "total": 0, "page": page, "per_page": per_page}
+            return empty_result
         if os.altsep and os.altsep in session_id:
-            return {"messages": [], "total": 0, "page": page, "per_page": per_page}
+            return empty_result
         # Disallow relative path components
         if session_id in {".", ".."}:
-            return {"messages": [], "total": 0, "page": page, "per_page": per_page}
+            return empty_result
         
         session_path = os.path.join(project_path, f"{session_id}.jsonl")
         
         if not os.path.exists(session_path):
-            return {"messages": [], "total": 0, "page": page, "per_page": per_page}
+            return empty_result
         
         messages = []
         with open(session_path, 'r', encoding='utf-8') as f:
